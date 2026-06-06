@@ -1,69 +1,73 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+name: Deploy Portfolio to GitHub Pages
 
 on:
-  # Runs on pushes targeting the default branch
   push:
-    branches: ['master']
-
-  # Allows you to run this workflow manually from the Actions tab
+    branches: [master]
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
-  group: 'pages'
+  group: pages
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
   deploy:
+    runs-on: ubuntu-latest
+
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+      url: ${{ steps.deploy.outputs.page_url }}
+
     steps:
-      # Step 1: Generate the installation access token using the GitHub App credentials
-      - uses: actions/create-github-app-token@v3
-        id: app-token
+      # 🔐 Generate GitHub App token
+      - name: Generate GitHub App token
+        id: auth
+        uses: actions/create-github-app-token@v3
         with:
-          # required
           client-id: ${{ secrets.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           owner: shevanfernando
           repositories: shevanfernando.github.io-source
-      # Step 2: Use the generated token to clone the target repository
-      - uses: actions/checkout@v6
+
+      # 📥 Checkout private source repo
+      - name: Checkout source repository
+        uses: actions/checkout@v4
         with:
           repository: shevanfernando/shevanfernando.github.io-source
-          token: ${{ steps.app-token.outputs.token }}
-          ref: ${{ github.head_ref }}
-          # Make sure the value of GITHUB_TOKEN will not be persisted in repo's config
-          persist-credentials: false
+          token: ${{ steps.auth.outputs.token }}
           path: app
-      - name: Set up Node
+          persist-credentials: false
+
+      # ⚙️ Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install dependencies
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      # 📦 Install dependencies & build
+      - name: Install and build
         working-directory: app
-        run: npm ci
-      - name: Build
-        working-directory: app
-        run: npm run build
-      - name: Setup Pages
+        run: |
+          npm ci
+          npm run build
+
+      # 📄 Configure GitHub Pages
+      - name: Configure Pages
         uses: actions/configure-pages@v5
+
+      # 📤 Upload build output
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
-          path: './app/dist'
+          path: app/dist
+
+      # 🚀 Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
-        id: deployment
+        id: deploy
         uses: actions/deploy-pages@v5
