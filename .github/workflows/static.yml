@@ -29,19 +29,22 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      # Step 1: Generate the installation access token using the GitHub App credentials
       - name: Generate GitHub App Token
-        id: app-token
-        uses: tibdex/github-app-token@v2
+        id: generate-token
+        uses: actions/create-github-app-token@v3
         with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.PRIVATE_KEY }}
-          installation_id: ${{ secrets.INSTALLATION_ID }}
-      - name: Checkout private repo
+          client-id: ${{ secrets.INSTALLATION_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
+      # Step 2: Use the generated token to clone the target repository
+      - name: Checkout Target Repository
         uses: actions/checkout@v4
         with:
           repository: OWNER/PRIVATE_REPO
-          token: ${{ steps.app-token.outputs.token }}
-          path: app
+          token: ${{ steps.generate-token.outputs.token }}
+          path: '.'
+          persist-credentials: false
 
       - name: Set up Node
         uses: actions/setup-node@v4
