@@ -41,7 +41,7 @@ jobs:
       - name: Checkout Target Repository
         uses: actions/checkout@v4
         with:
-          repository: OWNER/PRIVATE_REPO
+          repository: 'OWNER/PRIVATE_REPO'
           token: ${{ steps.generate-token.outputs.token }}
           path: '.'
           persist-credentials: false
