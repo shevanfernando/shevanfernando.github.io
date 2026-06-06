@@ -29,19 +29,25 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      - name: Decode the GitHub App Private Key
+        id: decode
+        run: |
+          private_key=$(echo "${{ secrets.APP_PRIVATE_KEY }}" | base64 -d | awk 'BEGIN {ORS="\\n"} {print}' | head -c -2) &> /dev/null
+          echo "::add-mask::$private_key"
+          echo "private-key=$private_key" >> "$GITHUB_OUTPUT"
       # Step 1: Generate the installation access token using the GitHub App credentials
       - uses: actions/create-github-app-token@v3
         id: app-token
         with:
           # required
           client-id: ${{ secrets.APP_CLIENT_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          private-key: ${{ steps.decode.outputs.private-key }}
       # Step 2: Use the generated token to clone the target repository
       - uses: actions/checkout@v6
         with:
           repository: shevanfernando/shevanfernando.github.io-source
           token: ${{ steps.app-token.outputs.token }}
-          ref: ${{ github.head_ref }}
+          # ref: ${{ github.head_ref }}
           # Make sure the value of GITHUB_TOKEN will not be persisted in repo's config
           persist-credentials: false
       - name: Set up Node
