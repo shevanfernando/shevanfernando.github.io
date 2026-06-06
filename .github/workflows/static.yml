@@ -44,6 +44,7 @@ jobs:
           ref: ${{ github.head_ref }}
           # Make sure the value of GITHUB_TOKEN will not be persisted in repo's config
           persist-credentials: false
+          path: app
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
