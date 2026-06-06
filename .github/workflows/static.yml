@@ -36,12 +36,12 @@ jobs:
           # required
           client-id: ${{ secrets.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          repository: shevanfernando.github.io-source
       # Step 2: Use the generated token to clone the target repository
       - uses: actions/checkout@v6
         with:
-          repository: shevanfernando/shevanfernando.github.io-source
           token: ${{ steps.app-token.outputs.token }}
-          # ref: ${{ github.head_ref }}
+          ref: ${{ github.head_ref }}
           # Make sure the value of GITHUB_TOKEN will not be persisted in repo's config
           persist-credentials: false
       - name: Set up Node
